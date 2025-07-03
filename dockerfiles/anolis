@@ -1,0 +1,62 @@
+# 使用 Anolis OS 8.4 作为基础镜像
+FROM openanolis/anolisos:8.4-x86_64
+
+# 设置环境变量，避免在安装过程中出现交互式提示
+ARG YUM_OPTS="--setopt=install_weak_deps=false --setopt=tsflags=nodocs"
+
+# 更新系统并清理YUM缓存
+RUN yum clean all && \
+    yum update -y && \
+    yum upgrade -y
+
+# 安装必要的软件包
+# 注意：Anolis/CentOS 的软件包名称和分组可能与 Debian 不同
+RUN yum install -y ${YUM_OPTS} \
+    gcc \
+    python3 \
+    vim-enhanced \
+    unzip \
+    ruby \
+    nodejs \
+    fakeroot \
+    dbus \
+    newt \
+    hexedit \
+    patch \
+    words \
+    man-pages \
+    file \
+    luajit \
+    make \
+    lua \
+    dialog \
+    curl \
+    less \
+    cowsay \
+    nmap-ncat && \
+    yum clean all
+
+# 添加新用户并设置密码
+RUN useradd -m user && echo "user:password" | chpasswd
+
+# 切换到 root 用户来复制文件并设置权限
+USER root
+COPY --chown=user:user ./examples /home/user/examples
+RUN chmod -R +x /home/user/examples/lua
+
+# 设置工作目录
+# Webvm 会提取此路径作为当前工作目录 (cwd)，此为可选设置
+WORKDIR /home/user/
+
+# 设置环境变量
+# Webvm 会提取这些变量，此为可选设置
+ENV HOME="/home/user" TERM="xterm" USER="user" SHELL="/bin/bash" EDITOR="vim" LANG="en_US.UTF-8" LC_ALL="en_US.UTF-8"
+
+# 为 root 用户设置密码
+RUN echo 'root:password' | chpasswd
+
+# 切换回普通用户
+USER user
+
+# 设置容器启动时执行的默认命令
+CMD [ "/bin/bash" ]
