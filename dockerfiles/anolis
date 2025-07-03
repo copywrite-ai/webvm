@@ -11,7 +11,8 @@ RUN yum clean all && \
 
 # 安装必要的软件包
 # 注意：Anolis/CentOS 的软件包名称和分组可能与 Debian 不同
-RUN yum install -y ${YUM_OPTS} \
+RUN yum install -y epel-release && \
+    yum install -y ${YUM_OPTS} \
     gcc \
     python3 \
     vim-enhanced \
